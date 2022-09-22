@@ -26,6 +26,7 @@ class SheetsClient:
     # share sheet with email
     def share_sheet(self, sheet):
         sheet.share("caltonji@gmail.com", perm_type='user', role='writer')
+        sheet.share('', perm_type='anyone', role='reader')
 
     def upload_df(self, sheet, df, worksheet_name):
         cols = len(df.columns)
