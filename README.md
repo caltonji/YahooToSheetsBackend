@@ -18,3 +18,8 @@ To Run Tests
 ```
 python -m unittest flaskr/test_yahoo_response_parser.py
 ```
+
+To Deploy
+```
+az webapp up --resource-group fantasy-football-upload --sku F1 --name "FantasyFootballUploadBackend"
+```

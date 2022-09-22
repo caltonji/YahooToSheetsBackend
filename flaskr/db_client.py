@@ -43,7 +43,7 @@ class DBClient:
         for index, row in players_df.iterrows():
             entity = {
                 "PartitionKey": season,
-                "RowKey": self.get_row_key(season, row["player_key"], row["week"]),
+                "RowKey": get_player_week_key(season, row["player_key"], row["week"]),
                 "Data": json.dumps(row.to_dict())
             }
             operations.append(("upsert", entity))

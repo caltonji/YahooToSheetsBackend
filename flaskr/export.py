@@ -9,11 +9,15 @@ from flaskr.yahoo_response_parser import merge_player_stats_data, get_player_wee
 
 bp = Blueprint('export', __name__)
 
-@bp.route('/export', methods=['GET'])
-def get_export():
+@bp.route('/export', methods=['POST'])
+def post_export():
     # get the parameter "access_token" and "league_key" sent by the user
-    access_token = request.args.get('access_token')
-    league_key = request.args.get('league_key')
+    if "access_token" not in request.json:
+        return "access_token is missing", 400
+    if "league_key" not in request.json:
+        return "league_key is missing", 400
+    access_token = request.json["access_token"]
+    league_key = request.json["league_key"]
 
     # create outbound connections
     yahoo_client = YahooClient(access_token)
@@ -37,7 +41,7 @@ def get_export():
     # Get player data and upload to google sheets
     player_data = yahoo_client.get_players_data(start_week, end_week, teams_data)
     stat_map = yahoo_client.get_stat_map(league_key)
-    player_week_keys = get_player_week_keys(player_data, season, start_week, end_week)
+    player_week_keys = get_player_week_keys(player_data, season)
     print("Fetched roster data")
 
     # First get player stats from DB
@@ -48,10 +52,10 @@ def get_export():
     # Get the player_keys that are in the list player_keys but not in player_stats_data_from_db["player_key"]
     player_week_keys_to_get_from_yahoo = player_week_keys
     if len(player_stats_data_from_db) > 0:
-        player_week_keys_from_db = get_player_week_keys(player_stats_data_from_db, season, start_week, end_week)
-        player_keys_to_get_from_yahoo = list(set(player_week_keys) - set(player_week_keys_from_db))
-    print(f"Found {len(player_stats_data_from_db)} in DB.  Fetching {len(player_keys_to_get_from_yahoo)} player week stats from Yahoo")
-    player_stats_data_from_yahoo = yahoo_client.get_player_stats_data(league_key, player_keys_to_get_from_yahoo, start_week, end_week, stat_map)
+        player_week_keys_from_db = get_player_week_keys(player_stats_data_from_db, season)
+        player_week_keys_to_get_from_yahoo = list(set(player_week_keys) - set(player_week_keys_from_db))
+    print(f"Found {len(player_stats_data_from_db)} in DB.  Fetching {len(player_week_keys_to_get_from_yahoo)} player week stats from Yahoo")
+    player_stats_data_from_yahoo = yahoo_client.get_player_stats_data(league_key, player_week_keys_to_get_from_yahoo, stat_map)
     player_data_with_stats = merge_player_stats_data(player_data, player_stats_data_from_yahoo)
     print("Fetched player stats data from yahoo")
     db_client.save_player_data(player_stats_data_from_yahoo, season)
@@ -82,8 +86,8 @@ def get_export():
     # return the url of the google sheet
     return sh.url
     
-@bp.route('/export_test', methods=['GET'])
-def get_export_test():
+@bp.route('/export_test', methods=['POST'])
+def post_export_test():
     # wait for 1 second than return success
     import time
     time.sleep(1)

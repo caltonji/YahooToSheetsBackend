@@ -6,11 +6,11 @@ import requests
 
 bp = Blueprint('auth', __name__)
 
-@bp.route('/auth', methods=['GET'])
-def get_auth():
+@bp.route('/auth', methods=['POST'])
+def post_auth():
     # get the parameter "yahoo_code" sent by the user  
-    if "yahoo_code" in request.args:
-        yahoo_code = request.args.get('yahoo_code')
+    if "yahoo_code" in request.json:
+        yahoo_code = request.json['yahoo_code']
         data =  {
             'grant_type': 'authorization_code',
             'code': yahoo_code,
@@ -22,8 +22,8 @@ def get_auth():
         response.raise_for_status()
         # response data has fields access_token, refresh_token and expires_in
         return response.json()
-    elif "refresh_token" in request.args:
-        refresh_token = request.args.get('refresh_token')
+    elif "refresh_token" in request.json:
+        refresh_token = request.json['refresh_token']
         data =  {
             'grant_type': 'refresh_token',
             'refresh_token': refresh_token,

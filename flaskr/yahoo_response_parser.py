@@ -244,8 +244,15 @@ def merge_player_stats_data(players_df, player_stats_df):
 def get_player_week_key(season, player_key, week):
     return f"{season}_{player_key}_{week}"
 
-def get_player_week_keys(players_df, season, start_week, end_week):
+def get_season_player_key_week_from_key(key):
+    season, player_key, week = key.split("_")
+    return season, player_key, week
+
+def get_player_week_keys(players_df, season):
     player_week_keys = []
-    for week in range(start_week, end_week):
-        player_week_keys.extend([get_player_week_key(season, player_key, week) for player_key in players_df["player_key"]])
+    # iterate rows of players_df.  Get player_week_key for player_key and week.
+    for index, row in players_df.iterrows():
+        player_key = row["player_key"]
+        week = row["week"]
+        player_week_keys.append(get_player_week_key(season, player_key, week))
     return player_week_keys
