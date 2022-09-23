@@ -1,1 +1,2 @@
 setup_local_credentials.sh
+flaskr/*.pyc

@@ -26,11 +26,11 @@ class SheetsClient:
     # share sheet with email
     def share_sheet(self, sheet):
         sheet.share("caltonji@gmail.com", perm_type='user', role='writer')
-        sheet.share('', perm_type='anyone', role='reader')
+        sheet.share(None, perm_type='anyone', role='reader')
 
     def upload_df(self, sheet, df, worksheet_name):
-        if df != None and len(df.columns) > 0 and len(df.index) > 0:
+        if df is not None and len(df.columns) > 0 and len(df.index) > 0:
             cols = len(df.columns)
             rows = len(df.index) + 1
-            ws = sheet.add_worksheet(title=worksheet_name, rows=rows, cols=cols)
-            ws.update([df.columns.values.tolist()] + df.values.tolist())
+            trades_ws = sheet.add_worksheet(title=worksheet_name, rows=rows, cols=cols)
+            trades_ws.update([df.columns.values.tolist()] + df.values.tolist())
