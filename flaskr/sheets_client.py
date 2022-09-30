@@ -32,5 +32,22 @@ class SheetsClient:
         if df is not None and len(df.columns) > 0 and len(df.index) > 0:
             cols = len(df.columns)
             rows = len(df.index) + 1
-            trades_ws = sheet.add_worksheet(title=worksheet_name, rows=rows, cols=cols)
-            trades_ws.update([df.columns.values.tolist()] + df.values.tolist())
+            ws = sheet.add_worksheet(title=worksheet_name, rows=rows, cols=cols)
+            ws.update([df.columns.values.tolist()] + df.values.tolist())
+        else:
+            ws = sheet.add_worksheet(title=worksheet_name, rows=1, cols=1)
+
+    # copy an example worksheet into the google sheet
+    def copy_example_ws(self, sheet):
+        example_sheet = self.gc.open_by_key(os.environ["example_sheet_id"])
+        example_ws = example_sheet.worksheet(os.environ["example_ws_name"])
+        info = example_ws.copy_to(sheet.id)
+
+        ws = sheet.worksheet(info["title"])
+
+        # Update the title and move the worksheet to the front
+        ws.update_title(os.environ["example_ws_name"])
+        sheet.reorder_worksheets([ws])
+
+        # delete the default sheet
+        sheet.del_worksheet(sheet.worksheet("Sheet1"))

@@ -47,6 +47,7 @@ def parse_teams_response(content):
     if end_week == int(league["end_week"]):
         end_week += 1
     season = league["season"]
+    league_name = league["name"]
     team_dicts = []
     for team in league["standings"]["teams"]["team"]:
         manager = team["managers"]["manager"]
@@ -68,7 +69,7 @@ def parse_teams_response(content):
             "losses": int(team["team_standings"]["outcome_totals"]["losses"]),
         }
         team_dicts.append(team_dict)
-    return start_date, start_week, end_week, season, pd.DataFrame(team_dicts)
+    return start_date, start_week, end_week, season, league_name, pd.DataFrame(team_dicts)
 
 def get_nickname(teams_df, team_key):
     return teams_df[teams_df["team_key"] == team_key]["manager_name"].values[0]
@@ -115,7 +116,6 @@ def parse_transactions_response(content, teams_data, start_date):
 def parse_trades(transactions_content, teams_data, start_date):
     trades = [trade for trade in transactions_content["fantasy_content"]["leagues"]["league"]["transactions"]["transaction"] if trade["type"] == "trade"]
     trade_dicts = []
-
     for trade in trades:
         trader_player_keys_received = []
         tradee_player_keys_received = []
@@ -164,7 +164,7 @@ def parse_trades(transactions_content, teams_data, start_date):
             "date": date.strftime("%m/%d/%Y, %H:%M:%S")
         }
         trade_dicts.append(trade_dict)
-        return pd.DataFrame(trade_dicts)
+    return pd.DataFrame(trade_dicts)
 
 def get_add_drops(transactions_content, teams_data, start_date):
     add_drops = [transaction for transaction in transactions_content["fantasy_content"]["leagues"]["league"]["transactions"]["transaction"] if transaction["type"] == "add/drop"]
@@ -256,3 +256,23 @@ def get_player_week_keys(players_df, season):
         week = row["week"]
         player_week_keys.append(get_player_week_key(season, player_key, week))
     return player_week_keys
+
+def parse_draft_results_response(content, teams_data, player_data):
+    draft_results_content = xmltodict.parse(content)
+    leagues = draft_results_content["fantasy_content"]["leagues"]["league"]
+    if not isinstance(leagues, list):
+        leagues = [leagues]
+    pick_dicts = []
+    for league in leagues:
+        for pick in league["draft_results"]["draft_result"]:
+            pick_dict = {
+                "pick": int(pick["pick"]),
+                "round": int(pick["round"]),
+                "team_key": pick["team_key"],
+                "player_key": pick["player_key"],
+            }
+            pick_dicts.append(pick_dict)
+    picks_df = pd.DataFrame(pick_dicts)
+    picks_df = picks_df.merge(teams_data[["team_key", "manager_name"]], how="left", on="team_key")
+    picks_df = picks_df.merge(player_data[["player_key", "name", "position"]].drop_duplicates(keep="first"), how="left", on="player_key")
+    return picks_df.dropna()

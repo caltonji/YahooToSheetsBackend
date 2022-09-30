@@ -28,13 +28,14 @@ def post_export():
     # get user_id from yahoo
     user_id = yahoo_client.get_user_id()
     print("Validated logged in user")
-    
-    # Create a Google Sheet
-    sh = sheets_client.create_sheet(league_key)
-    print("Created a new google sheet")
 
     # Get teams data and upload to google sheets
-    start_date, start_week, end_week, season, teams_data = yahoo_client.get_teams_data(league_key)
+    start_date, start_week, end_week, season, name, teams_data = yahoo_client.get_teams_data(league_key)
+
+    # Create a Google Sheet
+    sh = sheets_client.create_sheet(name + " " + season)
+    print("Created a new google sheet")
+
     sheets_client.upload_df(sh, teams_data, "managers")
     print("Uploaded manager data")
 
@@ -47,7 +48,6 @@ def post_export():
     # First get player stats from DB
     player_stats_data_from_db = db_client.get_player_data(player_week_keys, season)
     player_data_with_stats = merge_player_stats_data(player_data, player_stats_data_from_db)
-    
     # get the remaining player_stats_data from yahoo
     # Get the player_keys that are in the list player_keys but not in player_stats_data_from_db["player_key"]
     player_week_keys_to_get_from_yahoo = player_week_keys
@@ -56,7 +56,7 @@ def post_export():
         player_week_keys_to_get_from_yahoo = list(set(player_week_keys) - set(player_week_keys_from_db))
     print(f"Found {len(player_stats_data_from_db)} in DB.  Fetching {len(player_week_keys_to_get_from_yahoo)} player week stats from Yahoo")
     player_stats_data_from_yahoo = yahoo_client.get_player_stats_data(league_key, player_week_keys_to_get_from_yahoo, stat_map)
-    player_data_with_stats = merge_player_stats_data(player_data, player_stats_data_from_yahoo)
+    player_data_with_stats = merge_player_stats_data(player_data_with_stats, player_stats_data_from_yahoo)
     print("Fetched player stats data from yahoo")
     db_client.save_player_data(player_stats_data_from_yahoo, season)
     print("Saved player data in DB")
@@ -64,7 +64,6 @@ def post_export():
 
     sheets_client.upload_df(sh, player_data_with_stats, "players")
     print("uploaded player data in sheets")
-
 
     # Get transactions data and upload to google sheets
     trades_data, add_drops_data = yahoo_client.get_transactions_data(league_key, teams_data, start_date)
@@ -76,6 +75,14 @@ def post_export():
     matchups_data = yahoo_client.get_matchups_data(teams_data)
     sheets_client.upload_df(sh, matchups_data, "matchups")
     print("Uploaded matchups data")
+
+    # Get draft results
+    draft_results_data = yahoo_client.get_draft_results_data(league_key, teams_data, player_data_with_stats)
+    sheets_client.upload_df(sh, draft_results_data, "draft results")
+    print("Uploaded draft results")
+
+    sheets_client.copy_example_ws(sh)
+    print("Copied the example worksheet")
 
     # Share the google sheet to the user
     sheets_client.share_sheet(sh)

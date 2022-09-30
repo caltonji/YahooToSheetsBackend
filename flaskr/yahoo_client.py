@@ -2,7 +2,7 @@ import os
 import requests
 import xmltodict
 import pandas as pd
-from flaskr.yahoo_response_parser import parse_leagues_response, parse_league_settings_response_to_stat_map, parse_teams_response, parse_roster_content_list, parse_player_stats_content_list, parse_transactions_response, parse_matchups_response, parse_user_response, get_season_player_key_week_from_key
+from flaskr.yahoo_response_parser import parse_leagues_response, parse_league_settings_response_to_stat_map, parse_teams_response, parse_roster_content_list, parse_player_stats_content_list, parse_transactions_response, parse_matchups_response, parse_user_response, get_season_player_key_week_from_key, parse_draft_results_response
 
 class YahooClient:
     def __init__(self, access_token):
@@ -107,3 +107,11 @@ class YahooClient:
 
         # response data is XML, convert to pandas
         return parse_matchups_response(response.text, teams_data)
+        
+
+    def get_draft_results_data(self, league_key, teams_data, player_data):
+        uri = f"https://fantasysports.yahooapis.com/fantasy/v2/leagues;league_keys={league_key}/draftresults"   
+        response = requests.get(uri, headers=self.headers)
+        response.raise_for_status()
+
+        return parse_draft_results_response(response.text, teams_data, player_data)

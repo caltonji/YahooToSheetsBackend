@@ -1,5 +1,5 @@
 import unittest
-from flaskr.yahoo_response_parser import parse_leagues_response, parse_teams_response
+from flaskr.yahoo_response_parser import parse_leagues_response, parse_teams_response, parse_transactions_response
 import numpy as np
 import datetime
 
@@ -7,7 +7,2519 @@ class TestYahooResponseParser(unittest.TestCase):
 
 
     def test_parse_leagues(self):
-        example_leagues_response = """<?xml version="1.0" encoding="UTF-8"?>
+        result = parse_leagues_response(example_leagues_response)
+        self.assertEqual(len(result), 17)
+        self.assertTrue(np.array_equal(result.columns.to_numpy(), ['league_key', 'name', 'game_code','season','num_teams', 'is_finished']))
+        print(result)
+
+
+    def test_parse_teams_response(self):
+        start_date, start_week, end_week, season, name, data = parse_teams_response(example_teams_response)
+        self.assertEqual(start_date.strftime("%Y-%m-%d"), datetime.date(2022, 9, 8).strftime("%Y-%m-%d"))
+        self.assertEqual(start_week, 1)
+        self.assertEqual(end_week, 2)
+        self.assertEqual(season, "2022")
+        self.assertEqual(len(data), 10)
+        self.assertEqual(name, "Seattle 2022")
+        self.assertTrue(np.array_equal(data.columns.to_numpy(), ['name', 'team_key', 'number_of_moves', 'number_of_trades', 'clinched_playoffs', 'manager_name', 'division_id', 'draft_grade', 'rank', 'points_for', 'points_against', 'wins', 'losses']))
+        print(data)
+
+    def test_parse_transactions_response(self):
+        start_date, start_week, end_week, season, name, teams_data = parse_teams_response(example_teams_response)
+        trades_df, add_drops_df = parse_transactions_response(example_transactions_response, teams_data, start_date)
+        self.assertEqual(len(trades_df), 6)
+        self.assertEqual(len(add_drops_df), 37)
+
+example_transactions_response = """<?xml version="1.0" encoding="UTF-8"?>
+<fantasy_content xml:lang="en-US" yahoo:uri="http://fantasysports.yahooapis.com/fantasy/v2/leagues;league_keys=414.l.1425310;out=transactions" time="104.15697097778ms" copyright="Data provided by Yahoo! and STATS, LLC" refresh_rate="60" xmlns:yahoo="http://www.yahooapis.com/v1/base.rng" xmlns="http://fantasysports.yahooapis.com/fantasy/v2/base.rng">
+ <leagues count="1">
+  <league>
+   <league_key>414.l.1425310</league_key>
+   <league_id>1425310</league_id>
+   <name>Seattle 2022</name>
+   <url>https://football.fantasysports.yahoo.com/f1/1425310</url>
+   <logo_url></logo_url>
+   <password/>
+   <draft_status>postdraft</draft_status>
+   <num_teams>10</num_teams>
+   <edit_key>4</edit_key>
+   <weekly_deadline/>
+   <league_update_timestamp>1664431664</league_update_timestamp>
+   <scoring_type>head</scoring_type>
+   <league_type>private</league_type>
+   <renew/>
+   <renewed/>
+   <felo_tier>silver</felo_tier>
+   <iris_group_chat_id/>
+   <short_invitation_url>https://football.fantasysports.yahoo.com/f1/1425310/invitation?key=09e8210f558465dd&amp;ikey=f0ece576cf158de5</short_invitation_url>
+   <allow_add_to_dl_extra_pos>0</allow_add_to_dl_extra_pos>
+   <is_pro_league>0</is_pro_league>
+   <is_cash_league>0</is_cash_league>
+   <current_week>4</current_week>
+   <start_week>1</start_week>
+   <start_date>2022-09-08</start_date>
+   <end_week>17</end_week>
+   <end_date>2023-01-02</end_date>
+   <game_code>nfl</game_code>
+   <season>2022</season>
+   <transactions count="53">
+    <transaction>
+     <transaction_key>414.l.1425310.tr.57</transaction_key>
+     <transaction_id>57</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1664492288</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.31906</player_key>
+       <player_id>31906</player_id>
+       <name>
+        <full>Devin Singletary</full>
+        <first>Devin</first>
+        <last>Singletary</last>
+        <ascii_first>Devin</ascii_first>
+        <ascii_last>Singletary</ascii_last>
+       </name>
+       <editorial_team_abbr>Buf</editorial_team_abbr>
+       <display_position>RB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>freeagents</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.2</destination_team_key>
+        <destination_team_name>CHAZ Michael Michael's</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.31394</player_key>
+       <player_id>31394</player_id>
+       <name>
+        <full>Jeff Wilson Jr.</full>
+        <first>Jeff</first>
+        <last>Wilson Jr.</last>
+        <ascii_first>Jeff</ascii_first>
+        <ascii_last>Wilson Jr.</ascii_last>
+       </name>
+       <editorial_team_abbr>SF</editorial_team_abbr>
+       <display_position>RB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.2</source_team_key>
+        <source_team_name>CHAZ Michael Michael's</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.56</transaction_key>
+     <transaction_id>56</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1664416386</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.100015</player_key>
+       <player_id>100015</player_id>
+       <name>
+        <full>Miami</full>
+        <first>Miami</first>
+        <last/>
+        <ascii_first>Miami</ascii_first>
+        <ascii_last/>
+       </name>
+       <editorial_team_abbr>Mia</editorial_team_abbr>
+       <display_position>DEF</display_position>
+       <position_type>DT</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>freeagents</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.7</destination_team_key>
+        <destination_team_name>Shawn O’Donnell O’Connors</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.100017</player_key>
+       <player_id>100017</player_id>
+       <name>
+        <full>New England</full>
+        <first>New England</first>
+        <last/>
+        <ascii_first>New England</ascii_first>
+        <ascii_last/>
+       </name>
+       <editorial_team_abbr>NE</editorial_team_abbr>
+       <display_position>DEF</display_position>
+       <position_type>DT</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.7</source_team_key>
+        <source_team_name>Shawn O’Donnell O’Connors</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.55</transaction_key>
+     <transaction_id>55</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1664391231</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.100021</player_key>
+       <player_id>100021</player_id>
+       <name>
+        <full>Philadelphia</full>
+        <first>Philadelphia</first>
+        <last/>
+        <ascii_first>Philadelphia</ascii_first>
+        <ascii_last/>
+       </name>
+       <editorial_team_abbr>Phi</editorial_team_abbr>
+       <display_position>DEF</display_position>
+       <position_type>DT</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>freeagents</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.4</destination_team_key>
+        <destination_team_name>Kirkland Cousins</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.100018</player_key>
+       <player_id>100018</player_id>
+       <name>
+        <full>New Orleans</full>
+        <first>New Orleans</first>
+        <last/>
+        <ascii_first>New Orleans</ascii_first>
+        <ascii_last/>
+       </name>
+       <editorial_team_abbr>NO</editorial_team_abbr>
+       <display_position>DEF</display_position>
+       <position_type>DT</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.4</source_team_key>
+        <source_team_name>Kirkland Cousins</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.54</transaction_key>
+     <transaction_id>54</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1664379380</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.33605</player_key>
+       <player_id>33605</player_id>
+       <name>
+        <full>Khalil Herbert</full>
+        <first>Khalil</first>
+        <last>Herbert</last>
+        <ascii_first>Khalil</ascii_first>
+        <ascii_last>Herbert</ascii_last>
+       </name>
+       <editorial_team_abbr>Chi</editorial_team_abbr>
+       <display_position>RB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>freeagents</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.7</destination_team_key>
+        <destination_team_name>Shawn O’Donnell O’Connors</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.5228</player_key>
+       <player_id>5228</player_id>
+       <name>
+        <full>Tom Brady</full>
+        <first>Tom</first>
+        <last>Brady</last>
+        <ascii_first>Tom</ascii_first>
+        <ascii_last>Brady</ascii_last>
+       </name>
+       <editorial_team_abbr>TB</editorial_team_abbr>
+       <display_position>QB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.7</source_team_key>
+        <source_team_name>Shawn O’Donnell O’Connors</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.53</transaction_key>
+     <transaction_id>53</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1664373207</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.30142</player_key>
+       <player_id>30142</player_id>
+       <name>
+        <full>David Njoku</full>
+        <first>David</first>
+        <last>Njoku</last>
+        <ascii_first>David</ascii_first>
+        <ascii_last>Njoku</ascii_last>
+       </name>
+       <editorial_team_abbr>Cle</editorial_team_abbr>
+       <display_position>TE</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>freeagents</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.5</destination_team_key>
+        <destination_team_name>Madison Valley Playays</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.31928</player_key>
+       <player_id>31928</player_id>
+       <name>
+        <full>Dawson Knox</full>
+        <first>Dawson</first>
+        <last>Knox</last>
+        <ascii_first>Dawson</ascii_first>
+        <ascii_last>Knox</ascii_last>
+       </name>
+       <editorial_team_abbr>Buf</editorial_team_abbr>
+       <display_position>TE</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.5</source_team_key>
+        <source_team_name>Madison Valley Playays</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.52</transaction_key>
+     <transaction_id>52</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1664367582</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.100023</player_key>
+       <player_id>100023</player_id>
+       <name>
+        <full>Pittsburgh</full>
+        <first>Pittsburgh</first>
+        <last/>
+        <ascii_first>Pittsburgh</ascii_first>
+        <ascii_last/>
+       </name>
+       <editorial_team_abbr>Pit</editorial_team_abbr>
+       <display_position>DEF</display_position>
+       <position_type>DT</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>freeagents</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.10</destination_team_key>
+        <destination_team_name>Madison Valley Drought</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.31268</player_key>
+       <player_id>31268</player_id>
+       <name>
+        <full>Allen Lazard</full>
+        <first>Allen</first>
+        <last>Lazard</last>
+        <ascii_first>Allen</ascii_first>
+        <ascii_last>Lazard</ascii_last>
+       </name>
+       <editorial_team_abbr>GB</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.10</source_team_key>
+        <source_team_name>Madison Valley Drought</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.51</transaction_key>
+     <transaction_id>51</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1664350557</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.33781</player_key>
+       <player_id>33781</player_id>
+       <name>
+        <full>Riley Patterson</full>
+        <first>Riley</first>
+        <last>Patterson</last>
+        <ascii_first>Riley</ascii_first>
+        <ascii_last>Patterson</ascii_last>
+       </name>
+       <editorial_team_abbr>Jax</editorial_team_abbr>
+       <display_position>K</display_position>
+       <position_type>K</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>freeagents</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.2</destination_team_key>
+        <destination_team_name>CHAZ Michael Michael's</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.7520</player_key>
+       <player_id>7520</player_id>
+       <name>
+        <full>Robbie Gould</full>
+        <first>Robbie</first>
+        <last>Gould</last>
+        <ascii_first>Robbie</ascii_first>
+        <ascii_last>Gould</ascii_last>
+       </name>
+       <editorial_team_abbr>SF</editorial_team_abbr>
+       <display_position>K</display_position>
+       <position_type>K</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.2</source_team_key>
+        <source_team_name>CHAZ Michael Michael's</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.48</transaction_key>
+     <transaction_id>48</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1664350102</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.33398</player_key>
+       <player_id>33398</player_id>
+       <name>
+        <full>DeVonta Smith</full>
+        <first>DeVonta</first>
+        <last>Smith</last>
+        <ascii_first>DeVonta</ascii_first>
+        <ascii_last>Smith</ascii_last>
+       </name>
+       <editorial_team_abbr>Phi</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.2</destination_team_key>
+        <destination_team_name>CHAZ Michael Michael's</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.33965</player_key>
+       <player_id>33965</player_id>
+       <name>
+        <full>Garrett Wilson</full>
+        <first>Garrett</first>
+        <last>Wilson</last>
+        <ascii_first>Garrett</ascii_first>
+        <ascii_last>Wilson</ascii_last>
+       </name>
+       <editorial_team_abbr>NYJ</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.2</source_team_key>
+        <source_team_name>CHAZ Michael Michael's</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.47</transaction_key>
+     <transaction_id>47</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1664350102</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.29344</player_key>
+       <player_id>29344</player_id>
+       <name>
+        <full>Tyler Higbee</full>
+        <first>Tyler</first>
+        <last>Higbee</last>
+        <ascii_first>Tyler</ascii_first>
+        <ascii_last>Higbee</ascii_last>
+       </name>
+       <editorial_team_abbr>LAR</editorial_team_abbr>
+       <display_position>TE</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.7</destination_team_key>
+        <destination_team_name>Shawn O’Donnell O’Connors</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.31882</player_key>
+       <player_id>31882</player_id>
+       <name>
+        <full>Irv Smith Jr.</full>
+        <first>Irv</first>
+        <last>Smith Jr.</last>
+        <ascii_first>Irv</ascii_first>
+        <ascii_last>Smith Jr.</ascii_last>
+       </name>
+       <editorial_team_abbr>Min</editorial_team_abbr>
+       <display_position>TE</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.7</source_team_key>
+        <source_team_name>Shawn O’Donnell O’Connors</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.46</transaction_key>
+     <transaction_id>46</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1664350102</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.33966</player_key>
+       <player_id>33966</player_id>
+       <name>
+        <full>Chris Olave</full>
+        <first>Chris</first>
+        <last>Olave</last>
+        <ascii_first>Chris</ascii_first>
+        <ascii_last>Olave</ascii_last>
+       </name>
+       <editorial_team_abbr>NO</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.10</destination_team_key>
+        <destination_team_name>Madison Valley Drought</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.31981</player_key>
+       <player_id>31981</player_id>
+       <name>
+        <full>Hunter Renfrow</full>
+        <first>Hunter</first>
+        <last>Renfrow</last>
+        <ascii_first>Hunter</ascii_first>
+        <ascii_last>Renfrow</ascii_last>
+       </name>
+       <editorial_team_abbr>LV</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.10</source_team_key>
+        <source_team_name>Madison Valley Drought</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.45</transaction_key>
+     <transaction_id>45</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1664350102</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.34063</player_key>
+       <player_id>34063</player_id>
+       <name>
+        <full>Dameon Pierce</full>
+        <first>Dameon</first>
+        <last>Pierce</last>
+        <ascii_first>Dameon</ascii_first>
+        <ascii_last>Pierce</ascii_last>
+       </name>
+       <editorial_team_abbr>Hou</editorial_team_abbr>
+       <display_position>RB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.2</destination_team_key>
+        <destination_team_name>CHAZ Michael Michael's</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.30157</player_key>
+       <player_id>30157</player_id>
+       <name>
+        <full>Gerald Everett</full>
+        <first>Gerald</first>
+        <last>Everett</last>
+        <ascii_first>Gerald</ascii_first>
+        <ascii_last>Everett</ascii_last>
+       </name>
+       <editorial_team_abbr>LAC</editorial_team_abbr>
+       <display_position>TE</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.2</source_team_key>
+        <source_team_name>CHAZ Michael Michael's</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.44</transaction_key>
+     <transaction_id>44</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1664350102</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.34088</player_key>
+       <player_id>34088</player_id>
+       <name>
+        <full>Romeo Doubs</full>
+        <first>Romeo</first>
+        <last>Doubs</last>
+        <ascii_first>Romeo</ascii_first>
+        <ascii_last>Doubs</ascii_last>
+       </name>
+       <editorial_team_abbr>GB</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.7</destination_team_key>
+        <destination_team_name>Shawn O’Donnell O’Connors</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.30175</player_key>
+       <player_id>30175</player_id>
+       <name>
+        <full>JuJu Smith-Schuster</full>
+        <first>JuJu</first>
+        <last>Smith-Schuster</last>
+        <ascii_first>JuJu</ascii_first>
+        <ascii_last>Smith-Schuster</ascii_last>
+       </name>
+       <editorial_team_abbr>KC</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.7</source_team_key>
+        <source_team_name>Shawn O’Donnell O’Connors</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.43</transaction_key>
+     <transaction_id>43</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1664350102</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.30247</player_key>
+       <player_id>30247</player_id>
+       <name>
+        <full>Jamaal Williams</full>
+        <first>Jamaal</first>
+        <last>Williams</last>
+        <ascii_first>Jamaal</ascii_first>
+        <ascii_last>Williams</ascii_last>
+       </name>
+       <editorial_team_abbr>Det</editorial_team_abbr>
+       <display_position>RB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.10</destination_team_key>
+        <destination_team_name>Madison Valley Drought</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.100006</player_key>
+       <player_id>100006</player_id>
+       <name>
+        <full>Dallas</full>
+        <first>Dallas</first>
+        <last/>
+        <ascii_first>Dallas</ascii_first>
+        <ascii_last/>
+       </name>
+       <editorial_team_abbr>Dal</editorial_team_abbr>
+       <display_position>DEF</display_position>
+       <position_type>DT</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.10</source_team_key>
+        <source_team_name>Madison Valley Drought</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.42</transaction_key>
+     <transaction_id>42</transaction_id>
+     <type>trade</type>
+     <status>successful</status>
+     <timestamp>1663892733</timestamp>
+     <trader_team_key>414.l.1425310.t.9</trader_team_key>
+     <trader_team_name>Stone Way Stoners</trader_team_name>
+     <tradee_team_key>414.l.1425310.t.8</tradee_team_key>
+     <tradee_team_name>Puget Sound Reach Around</tradee_team_name>
+     <players count="2">
+      <player>
+       <player_key>414.p.33537</player_key>
+       <player_id>33537</player_id>
+       <name>
+        <full>Evan McPherson</full>
+        <first>Evan</first>
+        <last>McPherson</last>
+        <ascii_first>Evan</ascii_first>
+        <ascii_last>McPherson</ascii_last>
+       </name>
+       <editorial_team_abbr>Cin</editorial_team_abbr>
+       <display_position>K</display_position>
+       <position_type>K</position_type>
+       <transaction_data>
+        <type>trade</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.9</source_team_key>
+        <source_team_name>Stone Way Stoners</source_team_name>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.8</destination_team_key>
+        <destination_team_name>Puget Sound Reach Around</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.30426</player_key>
+       <player_id>30426</player_id>
+       <name>
+        <full>Younghoe Koo</full>
+        <first>Younghoe</first>
+        <last>Koo</last>
+        <ascii_first>Younghoe</ascii_first>
+        <ascii_last>Koo</ascii_last>
+       </name>
+       <editorial_team_abbr>Atl</editorial_team_abbr>
+       <display_position>K</display_position>
+       <position_type>K</position_type>
+       <transaction_data>
+        <type>trade</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.8</source_team_key>
+        <source_team_name>Puget Sound Reach Around</source_team_name>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.9</destination_team_key>
+        <destination_team_name>Stone Way Stoners</destination_team_name>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.41</transaction_key>
+     <transaction_id>41</transaction_id>
+     <type>trade</type>
+     <status>successful</status>
+     <timestamp>1663876784</timestamp>
+     <trader_team_key>414.l.1425310.t.2</trader_team_key>
+     <trader_team_name>CHAZ Michael Michael's</trader_team_name>
+     <tradee_team_key>414.l.1425310.t.8</tradee_team_key>
+     <tradee_team_name>Puget Sound Reach Around</tradee_team_name>
+     <players count="2">
+      <player>
+       <player_key>414.p.30426</player_key>
+       <player_id>30426</player_id>
+       <name>
+        <full>Younghoe Koo</full>
+        <first>Younghoe</first>
+        <last>Koo</last>
+        <ascii_first>Younghoe</ascii_first>
+        <ascii_last>Koo</ascii_last>
+       </name>
+       <editorial_team_abbr>Atl</editorial_team_abbr>
+       <display_position>K</display_position>
+       <position_type>K</position_type>
+       <transaction_data>
+        <type>trade</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.2</source_team_key>
+        <source_team_name>CHAZ Michael Michael's</source_team_name>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.8</destination_team_key>
+        <destination_team_name>Puget Sound Reach Around</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.7520</player_key>
+       <player_id>7520</player_id>
+       <name>
+        <full>Robbie Gould</full>
+        <first>Robbie</first>
+        <last>Gould</last>
+        <ascii_first>Robbie</ascii_first>
+        <ascii_last>Gould</ascii_last>
+       </name>
+       <editorial_team_abbr>SF</editorial_team_abbr>
+       <display_position>K</display_position>
+       <position_type>K</position_type>
+       <transaction_data>
+        <type>trade</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.8</source_team_key>
+        <source_team_name>Puget Sound Reach Around</source_team_name>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.2</destination_team_key>
+        <destination_team_name>CHAZ Michael Michael's</destination_team_name>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.40</transaction_key>
+     <transaction_id>40</transaction_id>
+     <type>trade</type>
+     <status>successful</status>
+     <timestamp>1663866734</timestamp>
+     <trader_team_key>414.l.1425310.t.1</trader_team_key>
+     <trader_team_name>39th St 69s</trader_team_name>
+     <tradee_team_key>414.l.1425310.t.10</tradee_team_key>
+     <tradee_team_name>Madison Valley Drought</tradee_team_name>
+     <players count="4">
+      <player>
+       <player_key>414.p.30977</player_key>
+       <player_id>30977</player_id>
+       <name>
+        <full>Josh Allen</full>
+        <first>Josh</first>
+        <last>Allen</last>
+        <ascii_first>Josh</ascii_first>
+        <ascii_last>Allen</ascii_last>
+       </name>
+       <editorial_team_abbr>Buf</editorial_team_abbr>
+       <display_position>QB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>trade</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.1</source_team_key>
+        <source_team_name>39th St 69s</source_team_name>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.10</destination_team_key>
+        <destination_team_name>Madison Valley Drought</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.30154</player_key>
+       <player_id>30154</player_id>
+       <name>
+        <full>Dalvin Cook</full>
+        <first>Dalvin</first>
+        <last>Cook</last>
+        <ascii_first>Dalvin</ascii_first>
+        <ascii_last>Cook</ascii_last>
+       </name>
+       <editorial_team_abbr>Min</editorial_team_abbr>
+       <display_position>RB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>trade</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.1</source_team_key>
+        <source_team_name>39th St 69s</source_team_name>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.10</destination_team_key>
+        <destination_team_name>Madison Valley Drought</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.31002</player_key>
+       <player_id>31002</player_id>
+       <name>
+        <full>Lamar Jackson</full>
+        <first>Lamar</first>
+        <last>Jackson</last>
+        <ascii_first>Lamar</ascii_first>
+        <ascii_last>Jackson</ascii_last>
+       </name>
+       <editorial_team_abbr>Bal</editorial_team_abbr>
+       <display_position>QB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>trade</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.10</source_team_key>
+        <source_team_name>Madison Valley Drought</source_team_name>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.1</destination_team_key>
+        <destination_team_name>39th St 69s</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.30121</player_key>
+       <player_id>30121</player_id>
+       <name>
+        <full>Christian McCaffrey</full>
+        <first>Christian</first>
+        <last>McCaffrey</last>
+        <ascii_first>Christian</ascii_first>
+        <ascii_last>McCaffrey</ascii_last>
+       </name>
+       <editorial_team_abbr>Car</editorial_team_abbr>
+       <display_position>RB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>trade</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.10</source_team_key>
+        <source_team_name>Madison Valley Drought</source_team_name>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.1</destination_team_key>
+        <destination_team_name>39th St 69s</destination_team_name>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.39</transaction_key>
+     <transaction_id>39</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663824618</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.28457</player_key>
+       <player_id>28457</player_id>
+       <name>
+        <full>Tyler Lockett</full>
+        <first>Tyler</first>
+        <last>Lockett</last>
+        <ascii_first>Tyler</ascii_first>
+        <ascii_last>Lockett</ascii_last>
+       </name>
+       <editorial_team_abbr>Sea</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>freeagents</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.1</destination_team_key>
+        <destination_team_name>39th St 69s</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.32857</player_key>
+       <player_id>32857</player_id>
+       <name>
+        <full>Donovan Peoples-Jones</full>
+        <first>Donovan</first>
+        <last>Peoples-Jones</last>
+        <ascii_first>Donovan</ascii_first>
+        <ascii_last>Peoples-Jones</ascii_last>
+       </name>
+       <editorial_team_abbr>Cle</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.1</source_team_key>
+        <source_team_name>39th St 69s</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.38</transaction_key>
+     <transaction_id>38</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663824569</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.100005</player_key>
+       <player_id>100005</player_id>
+       <name>
+        <full>Cleveland</full>
+        <first>Cleveland</first>
+        <last/>
+        <ascii_first>Cleveland</ascii_first>
+        <ascii_last/>
+       </name>
+       <editorial_team_abbr>Cle</editorial_team_abbr>
+       <display_position>DEF</display_position>
+       <position_type>DT</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>freeagents</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.1</destination_team_key>
+        <destination_team_name>39th St 69s</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.100021</player_key>
+       <player_id>100021</player_id>
+       <name>
+        <full>Philadelphia</full>
+        <first>Philadelphia</first>
+        <last/>
+        <ascii_first>Philadelphia</ascii_first>
+        <ascii_last/>
+       </name>
+       <editorial_team_abbr>Phi</editorial_team_abbr>
+       <display_position>DEF</display_position>
+       <position_type>DT</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.1</source_team_key>
+        <source_team_name>39th St 69s</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.37</transaction_key>
+     <transaction_id>37</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663771698</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.30153</player_key>
+       <player_id>30153</player_id>
+       <name>
+        <full>Curtis Samuel</full>
+        <first>Curtis</first>
+        <last>Samuel</last>
+        <ascii_first>Curtis</ascii_first>
+        <ascii_last>Samuel</ascii_last>
+       </name>
+       <editorial_team_abbr>Was</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>freeagents</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.7</destination_team_key>
+        <destination_team_name>Shawn O’Donnell O’Connors</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.33422</player_key>
+       <player_id>33422</player_id>
+       <name>
+        <full>Elijah Moore</full>
+        <first>Elijah</first>
+        <last>Moore</last>
+        <ascii_first>Elijah</ascii_first>
+        <ascii_last>Moore</ascii_last>
+       </name>
+       <editorial_team_abbr>NYJ</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.7</source_team_key>
+        <source_team_name>Shawn O’Donnell O’Connors</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.36</transaction_key>
+     <transaction_id>36</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663771391</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.31882</player_key>
+       <player_id>31882</player_id>
+       <name>
+        <full>Irv Smith Jr.</full>
+        <first>Irv</first>
+        <last>Smith Jr.</last>
+        <ascii_first>Irv</ascii_first>
+        <ascii_last>Smith Jr.</ascii_last>
+       </name>
+       <editorial_team_abbr>Min</editorial_team_abbr>
+       <display_position>TE</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>freeagents</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.7</destination_team_key>
+        <destination_team_name>Shawn O’Donnell O’Connors</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.30614</player_key>
+       <player_id>30614</player_id>
+       <name>
+        <full>Taysom Hill</full>
+        <first>Taysom</first>
+        <last>Hill</last>
+        <ascii_first>Taysom</ascii_first>
+        <ascii_last>Hill</ascii_last>
+       </name>
+       <editorial_team_abbr>NO</editorial_team_abbr>
+       <display_position>QB,TE</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.7</source_team_key>
+        <source_team_name>Shawn O’Donnell O’Connors</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.35</transaction_key>
+     <transaction_id>35</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663771218</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.27564</player_key>
+       <player_id>27564</player_id>
+       <name>
+        <full>Derek Carr</full>
+        <first>Derek</first>
+        <last>Carr</last>
+        <ascii_first>Derek</ascii_first>
+        <ascii_last>Carr</ascii_last>
+       </name>
+       <editorial_team_abbr>LV</editorial_team_abbr>
+       <display_position>QB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>freeagents</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.7</destination_team_key>
+        <destination_team_name>Shawn O’Donnell O’Connors</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.34063</player_key>
+       <player_id>34063</player_id>
+       <name>
+        <full>Dameon Pierce</full>
+        <first>Dameon</first>
+        <last>Pierce</last>
+        <ascii_first>Dameon</ascii_first>
+        <ascii_last>Pierce</ascii_last>
+       </name>
+       <editorial_team_abbr>Hou</editorial_team_abbr>
+       <display_position>RB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.7</source_team_key>
+        <source_team_name>Shawn O’Donnell O’Connors</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.34</transaction_key>
+     <transaction_id>34</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663747994</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.32675</player_key>
+       <player_id>32675</player_id>
+       <name>
+        <full>Tua Tagovailoa</full>
+        <first>Tua</first>
+        <last>Tagovailoa</last>
+        <ascii_first>Tua</ascii_first>
+        <ascii_last>Tagovailoa</ascii_last>
+       </name>
+       <editorial_team_abbr>Mia</editorial_team_abbr>
+       <display_position>QB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>freeagents</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.2</destination_team_key>
+        <destination_team_name>CHAZ Michael Michael's</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.33508</player_key>
+       <player_id>33508</player_id>
+       <name>
+        <full>Rhamondre Stevenson</full>
+        <first>Rhamondre</first>
+        <last>Stevenson</last>
+        <ascii_first>Rhamondre</ascii_first>
+        <ascii_last>Stevenson</ascii_last>
+       </name>
+       <editorial_team_abbr>NE</editorial_team_abbr>
+       <display_position>RB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.2</source_team_key>
+        <source_team_name>CHAZ Michael Michael's</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.32</transaction_key>
+     <transaction_id>32</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663745449</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.100024</player_key>
+       <player_id>100024</player_id>
+       <name>
+        <full>Los Angeles</full>
+        <first>Los Angeles</first>
+        <last/>
+        <ascii_first>Los Angeles</ascii_first>
+        <ascii_last/>
+       </name>
+       <editorial_team_abbr>LAC</editorial_team_abbr>
+       <display_position>DEF</display_position>
+       <position_type>DT</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.2</destination_team_key>
+        <destination_team_name>CHAZ Michael Michael's</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.100023</player_key>
+       <player_id>100023</player_id>
+       <name>
+        <full>Pittsburgh</full>
+        <first>Pittsburgh</first>
+        <last/>
+        <ascii_first>Pittsburgh</ascii_first>
+        <ascii_last/>
+       </name>
+       <editorial_team_abbr>Pit</editorial_team_abbr>
+       <display_position>DEF</display_position>
+       <position_type>DT</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.2</source_team_key>
+        <source_team_name>CHAZ Michael Michael's</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.31</transaction_key>
+     <transaction_id>31</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663745449</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.33495</player_key>
+       <player_id>33495</player_id>
+       <name>
+        <full>Michael Carter</full>
+        <first>Michael</first>
+        <last>Carter</last>
+        <ascii_first>Michael</ascii_first>
+        <ascii_last>Carter</ascii_last>
+       </name>
+       <editorial_team_abbr>NYJ</editorial_team_abbr>
+       <display_position>RB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.4</destination_team_key>
+        <destination_team_name>Kirkland Cousins</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.31906</player_key>
+       <player_id>31906</player_id>
+       <name>
+        <full>Devin Singletary</full>
+        <first>Devin</first>
+        <last>Singletary</last>
+        <ascii_first>Devin</ascii_first>
+        <ascii_last>Singletary</ascii_last>
+       </name>
+       <editorial_team_abbr>Buf</editorial_team_abbr>
+       <display_position>RB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.4</source_team_key>
+        <source_team_name>Kirkland Cousins</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.30</transaction_key>
+     <transaction_id>30</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663745449</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.30157</player_key>
+       <player_id>30157</player_id>
+       <name>
+        <full>Gerald Everett</full>
+        <first>Gerald</first>
+        <last>Everett</last>
+        <ascii_first>Gerald</ascii_first>
+        <ascii_last>Everett</ascii_last>
+       </name>
+       <editorial_team_abbr>LAC</editorial_team_abbr>
+       <display_position>TE</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.2</destination_team_key>
+        <destination_team_name>CHAZ Michael Michael's</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.29344</player_key>
+       <player_id>29344</player_id>
+       <name>
+        <full>Tyler Higbee</full>
+        <first>Tyler</first>
+        <last>Higbee</last>
+        <ascii_first>Tyler</ascii_first>
+        <ascii_last>Higbee</ascii_last>
+       </name>
+       <editorial_team_abbr>LAR</editorial_team_abbr>
+       <display_position>TE</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.2</source_team_key>
+        <source_team_name>CHAZ Michael Michael's</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.29</transaction_key>
+     <transaction_id>29</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663745449</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.100018</player_key>
+       <player_id>100018</player_id>
+       <name>
+        <full>New Orleans</full>
+        <first>New Orleans</first>
+        <last/>
+        <ascii_first>New Orleans</ascii_first>
+        <ascii_last/>
+       </name>
+       <editorial_team_abbr>NO</editorial_team_abbr>
+       <display_position>DEF</display_position>
+       <position_type>DT</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.4</destination_team_key>
+        <destination_team_name>Kirkland Cousins</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.100011</player_key>
+       <player_id>100011</player_id>
+       <name>
+        <full>Indianapolis</full>
+        <first>Indianapolis</first>
+        <last/>
+        <ascii_first>Indianapolis</ascii_first>
+        <ascii_last/>
+       </name>
+       <editorial_team_abbr>Ind</editorial_team_abbr>
+       <display_position>DEF</display_position>
+       <position_type>DT</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.4</source_team_key>
+        <source_team_name>Kirkland Cousins</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.28</transaction_key>
+     <transaction_id>28</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663745449</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.33965</player_key>
+       <player_id>33965</player_id>
+       <name>
+        <full>Garrett Wilson</full>
+        <first>Garrett</first>
+        <last>Wilson</last>
+        <ascii_first>Garrett</ascii_first>
+        <ascii_last>Wilson</ascii_last>
+       </name>
+       <editorial_team_abbr>NYJ</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.2</destination_team_key>
+        <destination_team_name>CHAZ Michael Michael's</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.32843</player_key>
+       <player_id>32843</player_id>
+       <name>
+        <full>Darnell Mooney</full>
+        <first>Darnell</first>
+        <last>Mooney</last>
+        <ascii_first>Darnell</ascii_first>
+        <ascii_last>Mooney</ascii_last>
+       </name>
+       <editorial_team_abbr>Chi</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.2</source_team_key>
+        <source_team_name>CHAZ Michael Michael's</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.27</transaction_key>
+     <transaction_id>27</transaction_id>
+     <type>add</type>
+     <status>successful</status>
+     <timestamp>1663745449</timestamp>
+     <players count="1">
+      <player>
+       <player_key>414.p.29236</player_key>
+       <player_id>29236</player_id>
+       <name>
+        <full>Carson Wentz</full>
+        <first>Carson</first>
+        <last>Wentz</last>
+        <ascii_first>Carson</ascii_first>
+        <ascii_last>Wentz</ascii_last>
+       </name>
+       <editorial_team_abbr>Was</editorial_team_abbr>
+       <display_position>QB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.6</destination_team_key>
+        <destination_team_name>Ballard Locks Jocks</destination_team_name>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.26</transaction_key>
+     <transaction_id>26</transaction_id>
+     <type>trade</type>
+     <status>successful</status>
+     <timestamp>1663705737</timestamp>
+     <trader_team_key>414.l.1425310.t.6</trader_team_key>
+     <trader_team_name>Ballard Locks Jocks</trader_team_name>
+     <tradee_team_key>414.l.1425310.t.4</tradee_team_key>
+     <tradee_team_name>Kirkland Cousins</tradee_team_name>
+     <players count="2">
+      <player>
+       <player_key>414.p.31896</player_key>
+       <player_id>31896</player_id>
+       <name>
+        <full>DK Metcalf</full>
+        <first>DK</first>
+        <last>Metcalf</last>
+        <ascii_first>DK</ascii_first>
+        <ascii_last>Metcalf</ascii_last>
+       </name>
+       <editorial_team_abbr>Sea</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>trade</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.6</source_team_key>
+        <source_team_name>Ballard Locks Jocks</source_team_name>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.4</destination_team_key>
+        <destination_team_name>Kirkland Cousins</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.30197</player_key>
+       <player_id>30197</player_id>
+       <name>
+        <full>Chris Godwin</full>
+        <first>Chris</first>
+        <last>Godwin</last>
+        <ascii_first>Chris</ascii_first>
+        <ascii_last>Godwin</ascii_last>
+       </name>
+       <editorial_team_abbr>TB</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>trade</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.4</source_team_key>
+        <source_team_name>Kirkland Cousins</source_team_name>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.6</destination_team_key>
+        <destination_team_name>Ballard Locks Jocks</destination_team_name>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.25</transaction_key>
+     <transaction_id>25</transaction_id>
+     <type>drop</type>
+     <status>successful</status>
+     <timestamp>1663686545</timestamp>
+     <players count="1">
+      <player>
+       <player_key>414.p.33391</player_key>
+       <player_id>33391</player_id>
+       <name>
+        <full>Trey Lance</full>
+        <first>Trey</first>
+        <last>Lance</last>
+        <ascii_first>Trey</ascii_first>
+        <ascii_last>Lance</ascii_last>
+       </name>
+       <editorial_team_abbr>SF</editorial_team_abbr>
+       <display_position>QB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.6</source_team_key>
+        <source_team_name>Ballard Locks Jocks</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.24</transaction_key>
+     <transaction_id>24</transaction_id>
+     <type>trade</type>
+     <status>successful</status>
+     <timestamp>1663685397</timestamp>
+     <trader_team_key>414.l.1425310.t.3</trader_team_key>
+     <trader_team_name>Central Thiccstrict</trader_team_name>
+     <tradee_team_key>414.l.1425310.t.5</tradee_team_key>
+     <tradee_team_name>Madison Valley Playays</tradee_team_name>
+     <players count="2">
+      <player>
+       <player_key>414.p.27120</player_key>
+       <player_id>27120</player_id>
+       <name>
+        <full>Brandon McManus</full>
+        <first>Brandon</first>
+        <last>McManus</last>
+        <ascii_first>Brandon</ascii_first>
+        <ascii_last>McManus</ascii_last>
+       </name>
+       <editorial_team_abbr>Den</editorial_team_abbr>
+       <display_position>K</display_position>
+       <position_type>K</position_type>
+       <transaction_data>
+        <type>trade</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.3</source_team_key>
+        <source_team_name>Central Thiccstrict</source_team_name>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.5</destination_team_key>
+        <destination_team_name>Madison Valley Playays</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.8565</player_key>
+       <player_id>8565</player_id>
+       <name>
+        <full>Matt Prater</full>
+        <first>Matt</first>
+        <last>Prater</last>
+        <ascii_first>Matt</ascii_first>
+        <ascii_last>Prater</ascii_last>
+       </name>
+       <editorial_team_abbr>Ari</editorial_team_abbr>
+       <display_position>K</display_position>
+       <position_type>K</position_type>
+       <transaction_data>
+        <type>trade</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.5</source_team_key>
+        <source_team_name>Madison Valley Playays</source_team_name>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.3</destination_team_key>
+        <destination_team_name>Central Thiccstrict</destination_team_name>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.23</transaction_key>
+     <transaction_id>23</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663256339</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.29344</player_key>
+       <player_id>29344</player_id>
+       <name>
+        <full>Tyler Higbee</full>
+        <first>Tyler</first>
+        <last>Higbee</last>
+        <ascii_first>Tyler</ascii_first>
+        <ascii_last>Higbee</ascii_last>
+       </name>
+       <editorial_team_abbr>LAR</editorial_team_abbr>
+       <display_position>TE</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>freeagents</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.2</destination_team_key>
+        <destination_team_name>CHAZ Michael Michael's</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.32788</player_key>
+       <player_id>32788</player_id>
+       <name>
+        <full>Albert Okwuegbunam</full>
+        <first>Albert</first>
+        <last>Okwuegbunam</last>
+        <ascii_first>Albert</ascii_first>
+        <ascii_last>Okwuegbunam</ascii_last>
+       </name>
+       <editorial_team_abbr>Den</editorial_team_abbr>
+       <display_position>TE</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.2</source_team_key>
+        <source_team_name>CHAZ Michael Michael's</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.22</transaction_key>
+     <transaction_id>22</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663186324</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.100023</player_key>
+       <player_id>100023</player_id>
+       <name>
+        <full>Pittsburgh</full>
+        <first>Pittsburgh</first>
+        <last/>
+        <ascii_first>Pittsburgh</ascii_first>
+        <ascii_last/>
+       </name>
+       <editorial_team_abbr>Pit</editorial_team_abbr>
+       <display_position>DEF</display_position>
+       <position_type>DT</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>freeagents</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.2</destination_team_key>
+        <destination_team_name>CHAZ Michael Michael's</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.100033</player_key>
+       <player_id>100033</player_id>
+       <name>
+        <full>Baltimore</full>
+        <first>Baltimore</first>
+        <last/>
+        <ascii_first>Baltimore</ascii_first>
+        <ascii_last/>
+       </name>
+       <editorial_team_abbr>Bal</editorial_team_abbr>
+       <display_position>DEF</display_position>
+       <position_type>DT</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.2</source_team_key>
+        <source_team_name>CHAZ Michael Michael's</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.21</transaction_key>
+     <transaction_id>21</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663186294</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.31394</player_key>
+       <player_id>31394</player_id>
+       <name>
+        <full>Jeff Wilson Jr.</full>
+        <first>Jeff</first>
+        <last>Wilson Jr.</last>
+        <ascii_first>Jeff</ascii_first>
+        <ascii_last>Wilson Jr.</ascii_last>
+       </name>
+       <editorial_team_abbr>SF</editorial_team_abbr>
+       <display_position>RB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>freeagents</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.2</destination_team_key>
+        <destination_team_name>CHAZ Michael Michael's</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.33582</player_key>
+       <player_id>33582</player_id>
+       <name>
+        <full>Elijah Mitchell</full>
+        <first>Elijah</first>
+        <last>Mitchell</last>
+        <ascii_first>Elijah</ascii_first>
+        <ascii_last>Mitchell</ascii_last>
+       </name>
+       <editorial_team_abbr>SF</editorial_team_abbr>
+       <display_position>RB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.2</source_team_key>
+        <source_team_name>CHAZ Michael Michael's</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.20</transaction_key>
+     <transaction_id>20</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663183448</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.7520</player_key>
+       <player_id>7520</player_id>
+       <name>
+        <full>Robbie Gould</full>
+        <first>Robbie</first>
+        <last>Gould</last>
+        <ascii_first>Robbie</ascii_first>
+        <ascii_last>Gould</ascii_last>
+       </name>
+       <editorial_team_abbr>SF</editorial_team_abbr>
+       <display_position>K</display_position>
+       <position_type>K</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>freeagents</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.8</destination_team_key>
+        <destination_team_name>Puget Sound Reach Around</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.33398</player_key>
+       <player_id>33398</player_id>
+       <name>
+        <full>DeVonta Smith</full>
+        <first>DeVonta</first>
+        <last>Smith</last>
+        <ascii_first>DeVonta</ascii_first>
+        <ascii_last>Smith</ascii_last>
+       </name>
+       <editorial_team_abbr>Phi</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.8</source_team_key>
+        <source_team_name>Puget Sound Reach Around</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.19</transaction_key>
+     <transaction_id>19</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663167244</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.100017</player_key>
+       <player_id>100017</player_id>
+       <name>
+        <full>New England</full>
+        <first>New England</first>
+        <last/>
+        <ascii_first>New England</ascii_first>
+        <ascii_last/>
+       </name>
+       <editorial_team_abbr>NE</editorial_team_abbr>
+       <display_position>DEF</display_position>
+       <position_type>DT</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>freeagents</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.7</destination_team_key>
+        <destination_team_name>Shawn O’Donnell O’Connors</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.100018</player_key>
+       <player_id>100018</player_id>
+       <name>
+        <full>New Orleans</full>
+        <first>New Orleans</first>
+        <last/>
+        <ascii_first>New Orleans</ascii_first>
+        <ascii_last/>
+       </name>
+       <editorial_team_abbr>NO</editorial_team_abbr>
+       <display_position>DEF</display_position>
+       <position_type>DT</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.7</source_team_key>
+        <source_team_name>Shawn O’Donnell O’Connors</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.17</transaction_key>
+     <transaction_id>17</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663140620</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.32857</player_key>
+       <player_id>32857</player_id>
+       <name>
+        <full>Donovan Peoples-Jones</full>
+        <first>Donovan</first>
+        <last>Peoples-Jones</last>
+        <ascii_first>Donovan</ascii_first>
+        <ascii_last>Peoples-Jones</ascii_last>
+       </name>
+       <editorial_team_abbr>Cle</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.1</destination_team_key>
+        <destination_team_name>39th St 69s</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.28457</player_key>
+       <player_id>28457</player_id>
+       <name>
+        <full>Tyler Lockett</full>
+        <first>Tyler</first>
+        <last>Lockett</last>
+        <ascii_first>Tyler</ascii_first>
+        <ascii_last>Lockett</ascii_last>
+       </name>
+       <editorial_team_abbr>Sea</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.1</source_team_key>
+        <source_team_name>39th St 69s</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.16</transaction_key>
+     <transaction_id>16</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663140620</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.31457</player_key>
+       <player_id>31457</player_id>
+       <name>
+        <full>Dontrell Hilliard</full>
+        <first>Dontrell</first>
+        <last>Hilliard</last>
+        <ascii_first>Dontrell</ascii_first>
+        <ascii_last>Hilliard</ascii_last>
+       </name>
+       <editorial_team_abbr>Ten</editorial_team_abbr>
+       <display_position>RB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.1</destination_team_key>
+        <destination_team_name>39th St 69s</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.27564</player_key>
+       <player_id>27564</player_id>
+       <name>
+        <full>Derek Carr</full>
+        <first>Derek</first>
+        <last>Carr</last>
+        <ascii_first>Derek</ascii_first>
+        <ascii_last>Carr</ascii_last>
+       </name>
+       <editorial_team_abbr>LV</editorial_team_abbr>
+       <display_position>QB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.1</source_team_key>
+        <source_team_name>39th St 69s</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.15</transaction_key>
+     <transaction_id>15</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663140620</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.27120</player_key>
+       <player_id>27120</player_id>
+       <name>
+        <full>Brandon McManus</full>
+        <first>Brandon</first>
+        <last>McManus</last>
+        <ascii_first>Brandon</ascii_first>
+        <ascii_last>McManus</ascii_last>
+       </name>
+       <editorial_team_abbr>Den</editorial_team_abbr>
+       <display_position>K</display_position>
+       <position_type>K</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.3</destination_team_key>
+        <destination_team_name>Central Thiccstrict</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.33211</player_key>
+       <player_id>33211</player_id>
+       <name>
+        <full>Rodrigo Blankenship</full>
+        <first>Rodrigo</first>
+        <last>Blankenship</last>
+        <ascii_first>Rodrigo</ascii_first>
+        <ascii_last>Blankenship</ascii_last>
+       </name>
+       <editorial_team_abbr>Ind</editorial_team_abbr>
+       <display_position>K</display_position>
+       <position_type>K</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.3</source_team_key>
+        <source_team_name>Central Thiccstrict</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.14</transaction_key>
+     <transaction_id>14</transaction_id>
+     <type>add</type>
+     <status>successful</status>
+     <timestamp>1663140620</timestamp>
+     <players count="1">
+      <player>
+       <player_key>414.p.25812</player_key>
+       <player_id>25812</player_id>
+       <name>
+        <full>Kirk Cousins</full>
+        <first>Kirk</first>
+        <last>Cousins</last>
+        <ascii_first>Kirk</ascii_first>
+        <ascii_last>Cousins</ascii_last>
+       </name>
+       <editorial_team_abbr>Min</editorial_team_abbr>
+       <display_position>QB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.4</destination_team_key>
+        <destination_team_name>Kirkland Cousins</destination_team_name>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.13</transaction_key>
+     <transaction_id>13</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663140620</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.31902</player_key>
+       <player_id>31902</player_id>
+       <name>
+        <full>Darrell Henderson Jr.</full>
+        <first>Darrell</first>
+        <last>Henderson Jr.</last>
+        <ascii_first>Darrell</ascii_first>
+        <ascii_last>Henderson Jr.</ascii_last>
+       </name>
+       <editorial_team_abbr>LAR</editorial_team_abbr>
+       <display_position>RB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.5</destination_team_key>
+        <destination_team_name>Madison Valley Playays</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.34007</player_key>
+       <player_id>34007</player_id>
+       <name>
+        <full>George Pickens</full>
+        <first>George</first>
+        <last>Pickens</last>
+        <ascii_first>George</ascii_first>
+        <ascii_last>Pickens</ascii_last>
+       </name>
+       <editorial_team_abbr>Pit</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.5</source_team_key>
+        <source_team_name>Madison Valley Playays</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.12</transaction_key>
+     <transaction_id>12</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1663140620</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.30614</player_key>
+       <player_id>30614</player_id>
+       <name>
+        <full>Taysom Hill</full>
+        <first>Taysom</first>
+        <last>Hill</last>
+        <ascii_first>Taysom</ascii_first>
+        <ascii_last>Hill</ascii_last>
+       </name>
+       <editorial_team_abbr>NO</editorial_team_abbr>
+       <display_position>QB,TE</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.7</destination_team_key>
+        <destination_team_name>Shawn O’Donnell O’Connors</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.32713</player_key>
+       <player_id>32713</player_id>
+       <name>
+        <full>Cole Kmet</full>
+        <first>Cole</first>
+        <last>Kmet</last>
+        <ascii_first>Cole</ascii_first>
+        <ascii_last>Kmet</ascii_last>
+       </name>
+       <editorial_team_abbr>Chi</editorial_team_abbr>
+       <display_position>TE</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.7</source_team_key>
+        <source_team_name>Shawn O’Donnell O’Connors</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.11</transaction_key>
+     <transaction_id>11</transaction_id>
+     <type>trade</type>
+     <status>successful</status>
+     <timestamp>1663084582</timestamp>
+     <trader_team_key>414.l.1425310.t.2</trader_team_key>
+     <trader_team_name>CHAZ Michael Michael's</trader_team_name>
+     <tradee_team_key>414.l.1425310.t.7</tradee_team_key>
+     <tradee_team_name>Shawn O’Donnell O’Connors</tradee_team_name>
+     <players count="2">
+      <player>
+       <player_key>414.p.34063</player_key>
+       <player_id>34063</player_id>
+       <name>
+        <full>Dameon Pierce</full>
+        <first>Dameon</first>
+        <last>Pierce</last>
+        <ascii_first>Dameon</ascii_first>
+        <ascii_last>Pierce</ascii_last>
+       </name>
+       <editorial_team_abbr>Hou</editorial_team_abbr>
+       <display_position>RB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>trade</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.2</source_team_key>
+        <source_team_name>CHAZ Michael Michael's</source_team_name>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.7</destination_team_key>
+        <destination_team_name>Shawn O’Donnell O’Connors</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.33508</player_key>
+       <player_id>33508</player_id>
+       <name>
+        <full>Rhamondre Stevenson</full>
+        <first>Rhamondre</first>
+        <last>Stevenson</last>
+        <ascii_first>Rhamondre</ascii_first>
+        <ascii_last>Stevenson</ascii_last>
+       </name>
+       <editorial_team_abbr>NE</editorial_team_abbr>
+       <display_position>RB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>trade</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.7</source_team_key>
+        <source_team_name>Shawn O’Donnell O’Connors</source_team_name>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.2</destination_team_key>
+        <destination_team_name>CHAZ Michael Michael's</destination_team_name>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.10</transaction_key>
+     <transaction_id>10</transaction_id>
+     <type>commish</type>
+     <status>successful</status>
+     <timestamp>1663007112</timestamp>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.9</transaction_key>
+     <transaction_id>9</transaction_id>
+     <type>commish</type>
+     <status>successful</status>
+     <timestamp>1663007112</timestamp>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.8</transaction_key>
+     <transaction_id>8</transaction_id>
+     <type>drop</type>
+     <status>successful</status>
+     <timestamp>1663006427</timestamp>
+     <players count="1">
+      <player>
+       <player_key>414.p.29369</player_key>
+       <player_id>29369</player_id>
+       <name>
+        <full>Dak Prescott</full>
+        <first>Dak</first>
+        <last>Prescott</last>
+        <ascii_first>Dak</ascii_first>
+        <ascii_last>Prescott</ascii_last>
+       </name>
+       <editorial_team_abbr>Dal</editorial_team_abbr>
+       <display_position>QB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.4</source_team_key>
+        <source_team_name>Kirkland Cousins</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.7</transaction_key>
+     <transaction_id>7</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1662880273</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.31268</player_key>
+       <player_id>31268</player_id>
+       <name>
+        <full>Allen Lazard</full>
+        <first>Allen</first>
+        <last>Lazard</last>
+        <ascii_first>Allen</ascii_first>
+        <ascii_last>Lazard</ascii_last>
+       </name>
+       <editorial_team_abbr>GB</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.10</destination_team_key>
+        <destination_team_name>Madison Valley Drought</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.33973</player_key>
+       <player_id>33973</player_id>
+       <name>
+        <full>Treylon Burks</full>
+        <first>Treylon</first>
+        <last>Burks</last>
+        <ascii_first>Treylon</ascii_first>
+        <ascii_last>Burks</ascii_last>
+       </name>
+       <editorial_team_abbr>Ten</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.10</source_team_key>
+        <source_team_name>Madison Valley Drought</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.6</transaction_key>
+     <transaction_id>6</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1662880273</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.32788</player_key>
+       <player_id>32788</player_id>
+       <name>
+        <full>Albert Okwuegbunam</full>
+        <first>Albert</first>
+        <last>Okwuegbunam</last>
+        <ascii_first>Albert</ascii_first>
+        <ascii_last>Okwuegbunam</ascii_last>
+       </name>
+       <editorial_team_abbr>Den</editorial_team_abbr>
+       <display_position>TE</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.2</destination_team_key>
+        <destination_team_name>CHAZ Michael Michael's</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.33996</player_key>
+       <player_id>33996</player_id>
+       <name>
+        <full>Kenneth Walker III</full>
+        <first>Kenneth</first>
+        <last>Walker III</last>
+        <ascii_first>Kenneth</ascii_first>
+        <ascii_last>Walker III</ascii_last>
+       </name>
+       <editorial_team_abbr>Sea</editorial_team_abbr>
+       <display_position>RB</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.2</source_team_key>
+        <source_team_name>CHAZ Michael Michael's</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.5</transaction_key>
+     <transaction_id>5</transaction_id>
+     <type>add/drop</type>
+     <status>successful</status>
+     <timestamp>1662880273</timestamp>
+     <players count="2">
+      <player>
+       <player_key>414.p.31981</player_key>
+       <player_id>31981</player_id>
+       <name>
+        <full>Hunter Renfrow</full>
+        <first>Hunter</first>
+        <last>Renfrow</last>
+        <ascii_first>Hunter</ascii_first>
+        <ascii_last>Renfrow</ascii_last>
+       </name>
+       <editorial_team_abbr>LV</editorial_team_abbr>
+       <display_position>WR</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>add</type>
+        <source_type>waivers</source_type>
+        <destination_type>team</destination_type>
+        <destination_team_key>414.l.1425310.t.10</destination_team_key>
+        <destination_team_name>Madison Valley Drought</destination_team_name>
+       </transaction_data>
+      </player>
+      <player>
+       <player_key>414.p.31012</player_key>
+       <player_id>31012</player_id>
+       <name>
+        <full>Mike Gesicki</full>
+        <first>Mike</first>
+        <last>Gesicki</last>
+        <ascii_first>Mike</ascii_first>
+        <ascii_last>Gesicki</ascii_last>
+       </name>
+       <editorial_team_abbr>Mia</editorial_team_abbr>
+       <display_position>TE</display_position>
+       <position_type>O</position_type>
+       <transaction_data>
+        <type>drop</type>
+        <source_type>team</source_type>
+        <source_team_key>414.l.1425310.t.10</source_team_key>
+        <source_team_name>Madison Valley Drought</source_team_name>
+        <destination_type>waivers</destination_type>
+       </transaction_data>
+      </player>
+     </players>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.4</transaction_key>
+     <transaction_id>4</transaction_id>
+     <type>commish</type>
+     <status>successful</status>
+     <timestamp>1662663341</timestamp>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.3</transaction_key>
+     <transaction_id>3</transaction_id>
+     <type>commish</type>
+     <status>successful</status>
+     <timestamp>1662663155</timestamp>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.2</transaction_key>
+     <transaction_id>2</transaction_id>
+     <type>commish</type>
+     <status>successful</status>
+     <timestamp>1662663031</timestamp>
+    </transaction>
+    <transaction>
+     <transaction_key>414.l.1425310.tr.1</transaction_key>
+     <transaction_id>1</transaction_id>
+     <type>commish</type>
+     <status>successful</status>
+     <timestamp>1662601026</timestamp>
+    </transaction>
+   </transactions>
+  </league>
+ </leagues>
+</fantasy_content>
+<!-- fantasy-sports-api- -pub-base-production-bf1-674dbf6bd-zn87b Fri Sep 30 05:06:21 UTC 2022 -->
+"""
+
+example_leagues_response = """<?xml version="1.0" encoding="UTF-8"?>
 <fantasy_content xml:lang="en-US" yahoo:uri="http://fantasysports.yahooapis.com/fantasy/v2/users;use_login=1/games/leagues" time="3715.9719467163ms" copyright="Data provided by Yahoo! and STATS, LLC" refresh_rate="60" xmlns:yahoo="http://www.yahooapis.com/v1/base.rng" xmlns="http://fantasysports.yahooapis.com/fantasy/v2/base.rng">
  <users count="1">
   <user>
@@ -898,14 +3410,8 @@ class TestYahooResponseParser(unittest.TestCase):
 </fantasy_content>
 <!-- fantasy-sports-api- -public-production-bf1-5dd4bf49c4-l2x9g Sun Aug 28 17:37:12 UTC 2022 -->
 """
-        result = parse_leagues_response(example_leagues_response)
-        self.assertEqual(len(result), 17)
-        self.assertTrue(np.array_equal(result.columns.to_numpy(), ['league_key', 'name', 'game_code','season','num_teams', 'is_finished']))
-        print(result)
 
-
-    def test_parse_teams_response(self):
-        content = """<?xml version="1.0" encoding="UTF-8"?>
+example_teams_response = """<?xml version="1.0" encoding="UTF-8"?>
             <fantasy_content xml:lang="en-US" yahoo:uri="http://fantasysports.yahooapis.com/fantasy/v2/leagues;league_keys=414.l.1425310/standings" time="62.927961349487ms" copyright="Data provided by Yahoo! and STATS, LLC" refresh_rate="60" xmlns:yahoo="http://www.yahooapis.com/v1/base.rng" xmlns="http://fantasysports.yahooapis.com/fantasy/v2/base.rng">
             <leagues count="1">
             <league>
@@ -1497,14 +4003,6 @@ class TestYahooResponseParser(unittest.TestCase):
             </fantasy_content>
             <!-- fantasy-sports-api- -public-production-bf1-5d8f885ccb-db62g Sat Sep 17 17:03:30 UTC 2022 -->
             """
-        start_date, start_week, end_week, season, data = parse_teams_response(content)
-        self.assertEqual(start_date.strftime("%Y-%m-%d"), datetime.date(2022, 9, 8).strftime("%Y-%m-%d"))
-        self.assertEqual(start_week, 1)
-        self.assertEqual(end_week, 2)
-        self.assertEqual(season, "2022")
-        self.assertEqual(len(data), 10)
-        self.assertTrue(np.array_equal(data.columns.to_numpy(), ['name', 'team_key', 'number_of_moves', 'number_of_trades', 'clinched_playoffs', 'manager_name', 'division_id', 'draft_grade', 'rank', 'points_for', 'points_against', 'wins', 'losses']))
-        print(data)
 
 if __name__ == '__main__':
     unittest.main()
