@@ -158,8 +158,8 @@ def parse_trades(transactions_content, teams_data, start_date):
             "trader_player_names_received": ', '.join(trader_player_names_received),
             "tradee_player_keys_received": ', '.join(tradee_player_keys_received),
             "tradee_player_names_received": ', '.join(tradee_player_names_received),
-            "trader_picks_received": ', '.join(trader_picks_received),
-            "tradee_picks_received": ', '.join(tradee_picks_received),
+            "trader_picks_received": ', '.join(str(pick) for pick in trader_picks_received),
+            "tradee_picks_received": ', '.join(str(pick) for pick in tradee_picks_received),
             "week_enacted": week_enacted,
             "date": date.strftime("%m/%d/%Y, %H:%M:%S")
         }
