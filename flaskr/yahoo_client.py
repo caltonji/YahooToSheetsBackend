@@ -2,7 +2,7 @@ import os
 import requests
 import xmltodict
 import pandas as pd
-from flaskr.yahoo_response_parser import parse_leagues_response, parse_league_settings_response_to_stat_map, parse_teams_response, parse_roster_content_list, parse_player_stats_content_list, parse_transactions_response, parse_matchups_response, parse_user_response, get_season_player_key_week_from_key, parse_draft_results_response
+from flaskr.yahoo_response_parser import parse_leagues_response, parse_league_settings_response_to_stat_map, parse_teams_response, parse_roster_content_list, parse_player_stats_response_list, parse_transactions_response, parse_matchups_response, parse_user_response, get_season_player_key_week_from_key, parse_draft_results_response
 
 class YahooClient:
     def __init__(self, access_token):
@@ -77,7 +77,7 @@ class YahooClient:
         for week in player_week_keys_by_week:
             player_week_keys_by_week[week] = [player_week_keys_by_week[week][i:i+25] for i in range(0, len(player_week_keys_by_week[week]), 25)]
         
-        player_stats_contents = []
+        player_stats_texts = []
         for week in player_week_keys_by_week:
             for batch in player_week_keys_by_week[week]:
                 player_keys_subset_str = ",".join(batch)
@@ -85,11 +85,15 @@ class YahooClient:
                 response = requests.get(uri, headers=self.headers)
                 response.raise_for_status()
 
-                player_stats_content = xmltodict.parse(response.text)
-                player_stats_contents.append(player_stats_content)
+                player_stats_texts.append(response.text)
         
         # response data is XML, convert to pandas
-        return parse_player_stats_content_list(player_stats_contents, stat_map)
+        try:
+            return parse_player_stats_response_list(player_stats_texts, stat_map)
+        except:
+            print("Error parsing player stats content list")
+            print(player_stats_texts)
+            raise
 
     def get_transactions_data(self, league_key, teams_data, start_date):
         uri = f"https://fantasysports.yahooapis.com/fantasy/v2/leagues;league_keys={league_key};out=transactions"

@@ -92,9 +92,10 @@ def parse_roster_content_list(roster_content_list, teams_data):
                 player_dicts.append(player_dict)
     return pd.DataFrame(player_dicts)
 
-def parse_player_stats_content_list(player_stats_contents, stat_map):
+def parse_player_stats_response_list(player_stats_texts, stat_map):
     player_stats_dicts = []
-    for player_stats_content in player_stats_contents:
+    for player_stats_text in player_stats_texts:
+        player_stats_content = xmltodict.parse(player_stats_text)
         for player_stats in player_stats_content["fantasy_content"]["leagues"]["league"]["players"]["player"]:
             player_stats_dict = {
                 'player_key': player_stats["player_key"],
