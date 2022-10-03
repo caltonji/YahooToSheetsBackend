@@ -96,18 +96,23 @@ def parse_player_stats_response_list(player_stats_texts, stat_map):
     player_stats_dicts = []
     for player_stats_text in player_stats_texts:
         player_stats_content = xmltodict.parse(player_stats_text)
-        for player_stats in player_stats_content["fantasy_content"]["leagues"]["league"]["players"]["player"]:
-            player_stats_dict = {
-                'player_key': player_stats["player_key"],
-                'week': int(player_stats["player_stats"]["week"]),
-                'points': round(float(player_stats["player_points"]["total"]), 2),
-                'name': player_stats["name"]["full"]
-            }
-            for stat in player_stats["player_stats"]["stats"]["stat"]:
-                stat_name = stat_map[stat['stat_id']]
-                stat_value = ast.literal_eval(stat['value'])
-                player_stats_dict[stat_name] = stat_value
-            player_stats_dicts.append(player_stats_dict)
+        for player_stats_raw in player_stats_content["fantasy_content"]["leagues"]["league"]["players"]["player"]:
+            # check why this is sometimes a list before doing this
+            if not isinstance(player_stats_raw, list):
+                player_stats_raw = [player_stats_raw]
+            
+            for player_stats in player_stats_raw:
+                player_stats_dict = {
+                    'player_key': player_stats["player_key"],
+                    'week': int(player_stats["player_stats"]["week"]),
+                    'points': round(float(player_stats["player_points"]["total"]), 2),
+                    'name': player_stats["name"]["full"]
+                }
+                for stat in player_stats["player_stats"]["stats"]["stat"]:
+                    stat_name = stat_map[stat['stat_id']]
+                    stat_value = ast.literal_eval(stat['value'])
+                    player_stats_dict[stat_name] = stat_value
+                player_stats_dicts.append(player_stats_dict)
     return pd.DataFrame(player_stats_dicts)
 
 def parse_transactions_response(content, teams_data, start_date):
